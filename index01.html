@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .quiz-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .timer {
+            font-size: 18px;
+            color: #d9534f;
+            font-weight: bold;
+        }
+        .question {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .answers label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4cae4c;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .result, .review-section {
+            font-size: 18px;
+            margin-top: 20px;
+            display: none;
+        }
+        .hidden {
+            display: none;
+        }
+        canvas {
+            max-width: 100%;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 20px;
+            }
+            .question {
+                font-size: 18px;
+            }
+            button {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1 style="text-align: center;">Science Test</h1>
+    <div style="text-align: center;" class="timer">Time left: <span id="timer"></span></div>
+
+<br><br>
+
+    <!-- Quiz Questions -->
+    <div id="quiz">
+        <div class="question hidden" id="q1">
+            <div>1. What is the capital of France?</div><br>
+            <div class="answers">
+                <label><input type="radio" name="q1" value="0"> Berlin</label>
+                <label><input type="radio" name="q1" value="1"> Paris</label>
+                <label><input type="radio" name="q1" value="0"> Madrid</label>
+                <label><input type="radio" name="q1" value="0"> Rome</label>
+            </div>
+        </div>
+
+        <div class="question hidden" id="q2">
+            <div>2. Which planet is known as the Red Planet?</div><br>
+            <div class="answers">
+                <label><input type="radio" name="q2" value="0"> Earth</label>
+                <label><input type="radio" name="q2" value="1"> Mars</label>
+                <label><input type="radio" name="q2" value="0"> Jupiter</label>
+                <label><input type="radio" name="q2" value="0"> Saturn</label>
+            </div>
+        </div>
+
+        <div class="question hidden" id="q3">
+            <div>3. Who wrote 'Hamlet'?</div><br>
+            <div class="answers">
+                <label><input type="radio" name="q3" value="0"> Charles Dickens</label>
+                <label><input type="radio" name="q3" value="1"> William Shakespeare</label>
+                <label><input type="radio" name="q3" value="0"> Mark Twain</label>
+                <label><input type="radio" name="q3" value="0"> J.K. Rowling</label>
+            </div>
+        </div>
+
+                <div class="question hidden" id="q4">
+            <div>4. Name of owner of SA Coaching Center?</div><br>
+            <div class="answers">
+                <label><input type="radio" name="q4" value="1"> SA Khan</label>
+                <label><input type="radio" name="q4" value="0"> William Shakespeare</label>
+                <label><input type="radio" name="q4" value="0"> Mark Twain</label>
+                <label><input type="radio" name="q4" value="0"> J.K. Rowling</label>
+            </div>
+        </div>
+
+
+
+
+
+
+        <!-- Navigation Buttons -->
+        <div class="navigation">
+            <button id="back" disabled>Back</button>
+            <button id="next">Next</button>
+        </div>
+    </div>
+
+    <!-- Result Section -->
+    <div id="result" class="result">
+        <h3 style="text-align: center;">Your quiz is submitted!</h3>
+        <p style="text-align: center;">Your score: <span id="score"></span> out of 4</p>
+        <p style="text-align: center;">Time taken: <span id="timeTaken"></span></p>
+        <button id="viewAnswers">View Answers</button>
+    </div>
+
+    <!-- Answer Review Section -->
+    <div id="reviewSection" class="review-section">
+        <h3>Answer Review:</h3>
+        <canvas id="pieChart"></canvas>
+        <div id="answerReview"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Timer setup
+    let totalTime = 15; // Total quiz time in seconds
+    const timerDisplay = document.getElementById('timer');
+    let timer;
+    let timeSpent = 0;
+
+    // Quiz Navigation
+    const questions = document.querySelectorAll('.question');
+    let currentQuestion = 0;
+    const nextButton = document.getElementById('next');
+    const backButton = document.getElementById('back');
+    const resultElement = document.getElementById('result');
+    const quizElement = document.getElementById('quiz');
+    const reviewSection = document.getElementById('reviewSection');
+    const viewAnswersButton = document.getElementById('viewAnswers');
+    const answerReview = document.getElementById('answerReview');
+    const scoreDisplay = document.getElementById('score');
+    const timeTakenDisplay = document.getElementById('timeTaken');
+
+    // Correct answers
+    const correctAnswers = [1, 1, 1, 1];
+
+    // Show first question on load
+    function showQuestion(index) {
+        questions.forEach((q, i) => {
+            q.classList.add('hidden');
+            if (i === index) q.classList.remove('hidden');
+        });
+        backButton.disabled = index === 0;
+        nextButton.textContent = index === questions.length - 1 ? 'Submit' : 'Next';
+    }
+
+    function startTimer() {
+        timer = setInterval(function() {
+            totalTime--;
+            timeSpent++;
+            let minutes = Math.floor(totalTime / 60);
+            let seconds = totalTime % 60;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            timerDisplay.textContent = minutes + ':' + seconds;
+
+            if (totalTime <= 0) {
+                clearInterval(timer);
+                submitQuiz();
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timer);
+    }
+
+    function submitQuiz() {
+        stopTimer(); // Stop the timer when the quiz is submitted
+        
+        const answers = [];
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let unansweredCount = 0;
+
+        questions.forEach((q, i) => {
+            const checkedOption = q.querySelector('input[type="radio"]:checked');
+            const userAnswer = checkedOption ? parseInt(checkedOption.value) : null;
+            answers.push(userAnswer);
+            if (userAnswer === correctAnswers[i]) {
+                correctCount++;
+            } else if (userAnswer === null) {
+                unansweredCount++;
+            } else {
+                incorrectCount++;
+            }
+        });
+
+        // Calculate time taken
+        const minutesSpent = Math.floor(timeSpent / 60);
+        const secondsSpent = timeSpent % 60;
+        const timeTaken = `${minutesSpent}:${secondsSpent < 10 ? '0' + secondsSpent : secondsSpent}`;
+        
+        // Display result
+        quizElement.style.display = 'none';
+        resultElement.style.display = 'block';
+        scoreDisplay.textContent = correctCount;
+        timeTakenDisplay.textContent = timeTaken; // Display the time taken
+
+        // Setup answer review
+        let reviewHTML = '';
+        correctAnswers.forEach((correct, index) => {
+            const userAnswer = answers[index] === null ? 'Not answered' : answers[index] == 1 ? 'Correct' : 'Incorrect';
+            const correctAnswer = correct == 1 ? 'Correct' : 'Incorrect';
+            reviewHTML += `<p>Question ${index + 1}: Your answer - ${userAnswer} (Correct answer: ${correctAnswer})</p>`;
+        });
+        answerReview.innerHTML = reviewHTML;
+
+        // Draw pie chart
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Correct', 'Incorrect', 'Unanswered'],
+                datasets: [{
+                    data: [correctCount, incorrectCount, unansweredCount],
+                    backgroundColor: ['#5cb85c', '#d9534f', '#f0ad4e']
+                }]
+            }
+        });
+    }
+
+    // Event listeners
+    nextButton.addEventListener('click', function() {
+        if (currentQuestion === questions.length - 1) {
+            submitQuiz();
+        } else {
+            currentQuestion++;
+            showQuestion(currentQuestion);
+        }
+    });
+
+    backButton.addEventListener('click', function() {
+        if (currentQuestion > 0) {
+            currentQuestion--;
+            showQuestion(currentQuestion);
+        }
+    });
+
+    viewAnswersButton.addEventListener('click', function() {
+        resultElement.style.display = 'none';
+        reviewSection.style.display = 'block';
+    });
+
+    // Initialize quiz
+    showQuestion(currentQuestion);
+    startTimer();
+</script>
+</body>
+</html>
